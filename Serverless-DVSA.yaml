@@ -1,0 +1,1213 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: OWASP DVSA Stack (Repository Deployment)
+Parameters:
+  AdminEmail:
+    Description: 'Email for admin user. Default password: ''changeme!'' (verification
+      email will be sent, when not using default).'
+    Type: String
+    Default: dvsa.admin@1secmail.com
+  WebsiteBucketPrefix:
+    Description: S3 bucket name prefix to hold DVSA website
+    Type: String
+    Default: dvsa-website
+Globals:
+  Api:
+    Cors:
+      AllowMethods: '''*'''
+      AllowHeaders: '''*'''
+      AllowOrigin: '''*'''
+Resources:
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Cors:
+        AllowHeaders: '*'
+        AllowMethods: '*'
+        AllowOrigin: '*'
+      StageName: dvsa
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title: DVSA-APIS
+        schemes:
+        - http
+        basePath: /
+        paths:
+          /total:
+            options:
+              tags:
+              - CORS
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST'''
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                type: mock
+            post:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTotalFunction.Arn}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+          /payment:
+            options:
+              tags:
+              - CORS
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST'''
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                type: mock
+            post:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PaymentProcessorFunction.Arn}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+          /order:
+            options:
+              tags:
+              - CORS
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST'''
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                type: mock
+            post:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OrderManagerFunction.Arn}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+          /admin:
+            options:
+              tags:
+              - CORS
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: '''OPTIONS,POST'''
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                type: mock
+            get:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdminOrdersMysqlFunction.Arn}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: GET
+                type: aws_proxy
+            post:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdminShellFunction.Arn}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+        definitions:
+          Empty:
+            type: object
+            title: Empty Schema
+  ApiGatewayAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      AuthorizerResultTtlInSeconds: 300
+      IdentitySource: method.request.header.Authorization
+      Name: DVSA-CognitoAuthorizer
+      RestApiId:
+        Ref: ApiGatewayApi
+      Type: COGNITO_USER_POOLS
+      ProviderARNs:
+      - Fn::GetAtt:
+        - CognitoUserPoolDvsaUserPool
+        - Arn
+  CognitoUserPoolDvsaUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: dvsa-user-pool
+      LambdaConfig:
+        PostConfirmation:
+          Fn::GetAtt:
+          - UserCreateFunction
+          - Arn
+      UsernameAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      Schema:
+      - AttributeDataType: String
+        Name: sub
+        DeveloperOnlyAttribute: false
+        Mutable: false
+        Required: true
+        StringAttributeConstraints:
+          MinLength: 1
+          MaxLength: 256
+      - AttributeDataType: String
+        Name: email
+        DeveloperOnlyAttribute: false
+        Mutable: true
+        Required: false
+        StringAttributeConstraints:
+          MinLength: 0
+          MaxLength: 256
+      - AttributeDataType: Boolean
+        Name: email_verified
+        DeveloperOnlyAttribute: false
+        Mutable: true
+        Required: false
+      - AttributeDataType: String
+        Name: phone_number
+        DeveloperOnlyAttribute: false
+        Mutable: true
+        Required: false
+        StringAttributeConstraints:
+          MinLength: 0
+          MaxLength: 256
+      - AttributeDataType: String
+        Name: address
+        DeveloperOnlyAttribute: false
+        Mutable: true
+        Required: false
+        StringAttributeConstraints:
+          MinLength: 0
+          MaxLength: 256
+      - AttributeDataType: String
+        Name: is_admin
+        DeveloperOnlyAttribute: false
+        Mutable: true
+        Required: false
+        StringAttributeConstraints:
+          MinLength: 1
+          MaxLength: 256
+      Policies:
+        PasswordPolicy:
+          RequireLowercase: false
+          RequireSymbols: false
+          RequireNumbers: false
+          MinimumLength: 6
+          RequireUppercase: false
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: dvsa-user-pool-client
+      UserPoolId:
+        Ref: CognitoUserPoolDvsaUserPool
+      ExplicitAuthFlows:
+      - ADMIN_NO_SRP_AUTH
+      GenerateSecret: false
+  CognitoUserPoolLambdaExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - UserCreateFunction
+        - Arn
+      Principal: cognito-idp.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolDvsaUserPool}
+  CognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: DVSA-IdentityPool
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+      - ClientId:
+          Ref: CognitoUserPoolClient
+        ProviderName:
+          Fn::GetAtt:
+          - CognitoUserPoolDvsaUserPool
+          - ProviderName
+  CognitoIdentityPoolRoles:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId:
+        Ref: CognitoIdentityPool
+      Roles:
+        authenticated:
+          Fn::GetAtt:
+          - CognitoAuthRole
+          - Arn
+  CognitoAuthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: cognito-identity.amazonaws.com
+          Action:
+          - sts:AssumeRoleWithWebIdentity
+          Condition:
+            StringEquals:
+              cognito-identity.amazonaws.com:aud:
+                Ref: CognitoIdentityPool
+            ForAnyValue:StringLike:
+              cognito-identity.amazonaws.com:amr: authenticated
+  SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: dvsa-order-paid-sqs
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DVSA-ORDERS-DB
+      AttributeDefinitions:
+      - AttributeName: orderId
+        AttributeType: S
+      - AttributeName: userId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: orderId
+        KeyType: HASH
+      - AttributeName: userId
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      GlobalSecondaryIndexes:
+      - IndexName: orderId-index
+        KeySchema:
+        - AttributeName: orderId
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+  InventoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DVSA-INVENTORY-DB
+      AttributeDefinitions:
+      - AttributeName: itemId
+        AttributeType: S
+      - AttributeName: category
+        AttributeType: S
+      KeySchema:
+      - AttributeName: itemId
+        KeyType: HASH
+      - AttributeName: category
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DVSA-USERS-DB
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  S3ReceiptsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: dvsa-receipts-bucket-${AWS::AccountId}-${AWS::Region}
+      CorsConfiguration:
+        CorsRules:
+        - AllowedOrigins:
+          - '*'
+          AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - HEAD
+          MaxAge: 3000
+  S3FeedbackBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: dvsa-feedback-bucket-${AWS::AccountId}-${AWS::Region}
+      CorsConfiguration:
+        CorsRules:
+        - AllowedOrigins:
+          - '*'
+          AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - HEAD
+          MaxAge: 3000
+  S3FeedbackBucketPermissions:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Fn::Sub: dvsa-feedback-bucket-${AWS::AccountId}-${AWS::Region}
+      PolicyDocument:
+        Statement:
+        - Sid: PublicWritefeedbackStatement
+          Principal: '*'
+          Action:
+          - s3:PutObject
+          - s3:PutObjectAcl
+          - s3:GetObject
+          - s3:DeleteObject
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::dvsa-feedback-bucket-${AWS::AccountId}-${AWS::Region}/*
+        - Sid: AdminListfeedbackStatement
+          Principal:
+            AWS:
+              Fn::Sub: arn:aws:iam::${AWS::AccountId}:root
+          Action:
+          - s3:*
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::dvsa-feedback-bucket-${AWS::AccountId}-${AWS::Region}
+  S3WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${WebsiteBucketPrefix}-${AWS::AccountId}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      CorsConfiguration:
+        CorsRules:
+        - AllowedOrigins:
+          - '*'
+          AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          - HEAD
+          MaxAge: 3000
+  S3WebsiteBucketPermissions:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Fn::Sub: ${WebsiteBucketPrefix}-${AWS::AccountId}
+      PolicyDocument:
+        Statement:
+        - Sid: PublicReadStatement
+          Principal: '*'
+          Action:
+          - s3:GetObject
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::${WebsiteBucketPrefix}-${AWS::AccountId}/*
+        - Sid: AdminBucketAccessStatement
+          Principal:
+            AWS:
+              Fn::Sub: arn:aws:iam::${AWS::AccountId}:root
+          Action:
+          - s3:*
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::${WebsiteBucketPrefix}-${AWS::AccountId}
+        - Sid: AdminResourceAccessStatement
+          Principal:
+            AWS:
+              Fn::Sub: arn:aws:iam::${AWS::AccountId}:root
+          Action:
+          - s3:*
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::${WebsiteBucketPrefix}-${AWS::AccountId}/*
+  OrderManagerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-MANAGER
+      Handler: order-manager.handler
+      Runtime: nodejs12.x
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/03ae80bf-6b45-4549-bf17-289f05a6c8e2
+      Environment:
+        Variables:
+          userpoolid:
+            Ref: CognitoUserPoolDvsaUserPool
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - AmazonCognitoPowerUser
+      - CloudWatchLogsFullAccess
+      - AWSLambdaRole
+      Events:
+        OrderApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayApi
+            Path: /order
+            Method: POST
+  OrderNewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-NEW
+      Handler: new_order.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/9414dfd6-eb43-4a3c-ae73-6a5d6af76983
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+  OrderCancelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-CANCEL
+      Handler: cancel_order.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/2ab7f5cf-6529-4689-a274-c628a354d091
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+  OrderGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-GET
+      Handler: get_order.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/4522eaa2-38c4-4d2a-ac41-5d7036871657
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+  OrdersGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-ORDERS
+      Handler: get_orders.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/87536d0c-f20c-463d-9a4e-b4edbcdf08f6
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+  OrderShippingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-SHIPPING
+      Handler: order_shipping.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/f97e1ddf-d900-43bd-b5ca-32d9da7ebd59
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+  OrderUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-UPDATE
+      Handler: update_order.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/cf3cd53b-e333-4f65-9f79-8a521793a6e8
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+  OrderBillingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-BILLING
+      Handler: order_billing.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/bb4f93dc-4d4b-4a53-8fc5-2e84d2efed87
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+          GET_CART_TOTAL:
+            Fn::Sub: https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/dvsa/total
+          PAYMENT_PROCESS_URL:
+            Fn::Sub: https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/dvsa/payment
+          SQS_URL:
+            Fn::Sub: https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/dvsa-order-paid-sqs
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+      - SQSSendMessagePolicy:
+          QueueName: dvsa-order-paid-sqs
+  OrderCompleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ORDER-COMPLETE
+      Handler: order_complete.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/31882d90-7eee-40bb-8f0c-f221509befe6
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+          INVENTORY_TABLE: DVSA-INVENTORY-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: '*'
+  PaymentProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-PAYMENT-PROCESSOR
+      Handler: payment_processing.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/2d970b56-d0f1-490e-b5c9-e3127bdfdd7e
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-INVENTORY-DB
+      Events:
+        PaymentProcessorApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayApi
+            Path: /payment
+            Method: POST
+  GetTotalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-GET-CART-TOTAL
+      Handler: get_cart_total.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/3e7ff0b9-ff87-414f-a567-a43818c921ba
+      Environment:
+        Variables:
+          INVENTORY_TABLE: DVSA-INVENTORY-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-INVENTORY-DB
+      Events:
+        CartTotalApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayApi
+            Path: /total
+            Method: POST
+  CreateReceiptFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-CREATE-RECEIPT
+      Handler: create_receipt.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/a1d09d35-03ad-4a7e-ae24-c82169321920
+      Environment:
+        Variables:
+          INVENTORY_TABLE: DVSA-INVENTORY-DB
+          ORDERS_TABLE: DVSA-ORDERS-DB
+          RECEIPTS_BUCKET:
+            Fn::Sub: dvsa-receipts-bucket-${AWS::AccountId}-${AWS::Region}
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - S3CrudPolicy:
+          BucketName:
+            Fn::Sub: dvsa-receipts-bucket-${AWS::AccountId}-${AWS::Region}
+      - DynamoDBCrudPolicy:
+          TableName: '*'
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - SQSQueue
+              - Arn
+            BatchSize: 1
+  SendReceiptFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-SEND-RECEIPT-EMAIL
+      Handler: send_receipt_email.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/08935a6d-d837-4b3c-9bea-87434d2af495
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+          SOURCE_EMAIL: dvsa.noreply@1secmail.com
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - AmazonSESFullAccess
+      - S3CrudPolicy:
+          BucketName: '*'
+      - DynamoDBCrudPolicy:
+          TableName: '*'
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - sts:GetCallerIdentify
+          Resource: '*'
+      Events:
+        ReceiptUpload:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: S3ReceiptsBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: suffix
+                  Value: .raw
+  FeedbackUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-FEEDBACK-UPLOADS
+      Handler: feedback_uploads.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/90539d40-6669-46e9-82c8-12e47e1dfc41
+      Environment:
+        Variables:
+          FEEDBACK_BUCKET:
+            Fn::Sub: dvsa-feedback-bucket-${AWS::AccountId}-${AWS::Region}
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - AWSLambda_FullAccess
+      - AmazonSESFullAccess
+      - AmazonS3FullAccess
+      Events:
+        ReceiptUpload:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: S3FeedbackBucket
+            Events: s3:ObjectCreated:*
+  CronProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-CRON-PROCESSOR
+      Handler: cron_processor.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/b85ff0c8-cdee-4be1-8e93-5e2edd0098ba
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+  CronOrderCleanerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-CRON-ORDER-CLEANER
+      Handler: cron_cleaner.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/863ba5e1-291f-4d3d-94d6-668aff289959
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - AWSLambdaExecute
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+  CronJobUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-CRON-JOB-UPDATE
+      Handler: cron_update.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/217dc7ba-ba0f-4802-930d-ab6b9a62ae85
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+      - AWSLambdaRole
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-ORDERS-DB
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+  UserCreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-USER-CREATE
+      Handler: user_create.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/906d4814-0085-40e8-9527-2b22df850ed0
+      Environment:
+        Variables:
+          USERS_TABLE: DVSA-USERS-DB
+          GENERIC_AVATAR: https://i.imgur.com/tAmofRW.png
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName: DVSA-USER-INBOX
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-USERS-DB
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - ses:VerifyEmailIdentity
+          Resource: '*'
+  UserAccountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-USER-ACCOUNT
+      Handler: user_account.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/ea45ef80-05af-41bf-b368-bd206bd7dc27
+      Environment:
+        Variables:
+          USERS_TABLE: DVSA-USERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-USERS-DB
+  UserProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-USER-PROFILE
+      Handler: user_profile.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/97d28c8f-bbcd-475a-a5cb-6f9443960435
+      Environment:
+        Variables:
+          USERS_TABLE: DVSA-USERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: DVSA-USERS-DB
+  UserInboxFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-USER-INBOX
+      Handler: user_inbox.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/cf8e702d-3012-4d39-804b-9000a8a44f03
+      Environment:
+        Variables:
+          USERS_TABLE: DVSA-USERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - CloudWatchLogsFullAccess
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - sts:GetCallerIdentify
+          - ses:VerifyEmailIdentity
+          Resource: '*'
+  AdminGetOrders:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ADMIN-GET-ORDERS
+      Handler: admin_get_orders.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/3f0a2e9f-992d-4ac8-9758-5c5ba440a130
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - AWSLambda_FullAccess
+      - AmazonDynamoDBFullAccess
+  AdminGetReceiptFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ADMIN-GET-RECEIPT
+      Handler: admin_get_receipts.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/1b3f2a6a-90aa-4814-b8c3-f32f2c979447
+      Environment:
+        Variables:
+          RECEIPTS_BUCKET:
+            Fn::Sub: dvsa-receipts-bucket-${AWS::AccountId}-${AWS::Region}
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - AWSLambda_FullAccess
+      - AmazonS3FullAccess
+  AdminUpdateOrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ADMIN-UPDATE-ORDERS
+      Handler: admin_update_orders.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/a1fc7853-2c4e-4342-a980-80af3c568c39
+      Environment:
+        Variables:
+          ORDERS_TABLE: DVSA-ORDERS-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - AWSLambda_FullAccess
+      - AmazonDynamoDBFullAccess
+  AdminUpdateInventoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ADMIN-UPDATE-INVENTORY
+      Handler: admin_update_inventory.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/e052ab8c-93f4-4245-8cd5-ced7e9eb2dcb
+      Environment:
+        Variables:
+          INVENTORY_TABLE: DVSA-INVENTORY-DB
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+      - AWSLambda_FullAccess
+      - AmazonDynamoDBFullAccess
+  AdminShellFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ADMIN-SHELL
+      Handler: admin_shell.handler
+      Runtime: nodejs12.x
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/cf2ca926-dd7a-462a-a08b-1837563097c5
+      Environment:
+        Variables:
+          userpoolid:
+            Ref: CognitoUserPoolDvsaUserPool
+          usertable: DVSA-USERS-DB
+      MemorySize: 128
+      Timeout: 30
+      Events:
+        AdminApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayApi
+            Path: /admin
+            Method: POST
+      Policies:
+      - AWSLambda_FullAccess
+      - AmazonDynamoDBFullAccess
+  AdminOrdersMysqlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DVSA-ADMIN-ORDERS-MYSQL
+      Handler: admin_orders_mysql.handler
+      Runtime: nodejs12.x
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/65d2b3ec-fb27-4fbd-98ba-da7b2b4f69fd
+      Environment:
+        Variables:
+          db_name: bvl1zuoffpflrto3zdrt
+          db_pw: lQ8PQBkxAqFFCizNI5vt
+          db_url: bvl1zuoffpflrto3zdrt-mysql.services.clever-cloud.com
+          db_user: uk7kkjxwjxurqudy
+      MemorySize: 256
+      Timeout: 30
+      Events:
+        AdminApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGatewayApi
+            Path: /admin
+            Method: GET
+      Policies:
+      - AWSLambda_FullAccess
+  InitCustomFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+    - S3WebsiteBucket
+    - S3FeedbackBucket
+    - S3ReceiptsBucket
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName: DVSA-INIT
+      Handler: dvsa_init.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: awsserverlessrepo-changesets-11sisnolss5np
+        Key: 874950427822/arn:aws:serverlessrepo:us-east-1:674087993380:applications-OWASP-DVSA-versions-2.1.7/ea3568f1-e92d-4153-b692-6fc996f1ebad
+      Environment:
+        Variables:
+          ACCOUNT_ID:
+            Ref: AWS::AccountId
+          USER_POOL_ID:
+            Ref: CognitoUserPoolDvsaUserPool
+          USER_POOL_CLIENT_ID:
+            Ref: CognitoUserPoolClient
+          IDENTITY_POOL:
+            Ref: CognitoIdentityPool
+          ORDER_API:
+            Fn::Sub: https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/dvsa
+          ADMIN_EMAIL:
+            Fn::Sub: ${AdminEmail}
+          CLIENT_BUCKET:
+            Fn::Sub: ${WebsiteBucketPrefix}-${AWS::AccountId}
+          RECEIPTS_BUCKET:
+            Fn::Sub: dvsa-receipts-bucket-${AWS::AccountId}-${AWS::Region}
+          FEEDBACK_BUCKET:
+            Fn::Sub: dvsa-feedback-bucket-${AWS::AccountId}-${AWS::Region}
+      MemorySize: 512
+      Timeout: 120
+      Policies:
+      - AmazonSESFullAccess
+      - AmazonDynamoDBFullAccess
+      - AmazonS3FullAccess
+      - AmazonCognitoPowerUser
+      - CloudWatchLogsFullAccess
+  InitializeApplication:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - InitCustomFunction
+        - Arn
+Outputs:
+  WebsiteURL:
+    Description: DVSA Website URL
+    Value:
+      Fn::Sub: http://${WebsiteBucketPrefix}-${AWS::AccountId}.s3-website.${AWS::Region}.amazonaws.com
